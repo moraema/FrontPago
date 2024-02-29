@@ -1,0 +1,171 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import './styles.css';
+
+const App = () => {
+  const [notification, setNotification] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');
+  const [cantidad, setCantidad] = useState('');
+  const [producto, setProducto] = useState('');
+  const [telefono, setTelefono] = useState('');
+
+  useEffect(() => {
+    const newSocket = new WebSocket('ws://localhost:4000');
+    setSocket(newSocket);
+
+    newSocket.onmessage = handleWebSocketMessage;
+
+    window.addEventListener('beforeunload', handleCloseWebSocket);
+
+    return () => {
+      handleCloseWebSocket();
+      window.removeEventListener('beforeunload', handleCloseWebSocket);
+    };
+  }, []);
+
+  const handleWebSocketMessage = (event) => {
+    const data = JSON.parse(event.data);
+    setNotification(data);
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 10000);
+  };
+
+  const handleEnviarPagos = async () => {
+    try {
+      const response = await axios.post('http://localhost:3001/pagos', {
+        nombre,
+        apellido,
+        cantidad,
+        producto,
+        telefono
+      });
+      console.log('Pago enviado correctamente:', response.data);
+    setNombre('');
+    setApellido('');
+    setCantidad('');
+    setProducto('');
+    setTelefono('');
+    } catch (error) {
+      console.error('Error al enviar el pago:', error);
+    }
+  };
+
+  const handleCloseWebSocket = () => {
+    if (socket) {
+      socket.close();
+    }
+  };
+
+  return (
+    <div className="app-container">
+      <h1>Realizar Pagos</h1>
+      {notification && (
+        <div className="notification">
+          {notification.message}
+        </div>
+      )}
+      <div className="pagos-form">
+        <input type="text" placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+        <input type="text" placeholder="Apellido" value={apellido} onChange={(e) => setApellido(e.target.value)} />
+        <input type="text" placeholder="Cantidad" value={cantidad} onChange={(e) => setCantidad(e.target.value)} />
+        <input type="text" placeholder="Producto" value={producto} onChange={(e) => setProducto(e.target.value)} />
+        <input type="text" placeholder="Teléfono" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+        <button onClick={handleEnviarPagos}>Enviar Pagos</button>
+      </div>
+    </div>
+  );
+};
+
+export default App;
+
+
+
+
+
+/* styles.css */
+
+.app-container {
+    max-width: 400px;
+    /* Reduje el ancho máximo del contenedor */
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.pagos-form {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.pagos-form h2 {
+    margin-bottom: 20px;
+}
+
+.pagos-form label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.pagos-form input {
+    width: calc(100% - 20px);
+    /* Reduje un poco el ancho de los inputs */
+    padding: 8px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    /* Tamaño de fuente ajustado */
+}
+
+.pagos-form button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    /* Tamaño de fuente ajustado */
+}
+
+.pagos-form button:hover {
+    background-color: #0056b3;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #007bff;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.5s ease forwards, fadeOut 0.5s ease 5s forwards;
+}
+
+
+/* Animación de entrada */
+
+@keyframes slideIn {
+    from {
+        top: -100px;
+    }
+    to {
+        top: 20px;
+    }
+}
+
+
+/* Animación de salida */
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
