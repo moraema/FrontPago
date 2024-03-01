@@ -12,8 +12,12 @@ const App = () => {
   const telefono = '932 111 47 13';
 
   useEffect(() => {
-    const newSocket = new WebSocket('ws://localhost:4000');
+    const newSocket = new WebSocket('ws://3.215.18.246:4000');
     setSocket(newSocket);
+
+    newSocket.onopen = () => {
+      console.log('Conexión WebSocket establecida correctamente');
+    };
 
     newSocket.onmessage = handleWebSocketMessage;
 
@@ -36,7 +40,7 @@ const App = () => {
 
   const handleEnviarPagos = async () => {
     try {
-      const response = await axios.post('http://localhost:3001/pagos', {
+      const response = await axios.post('http://52.5.151.241/pagos', {
         nombre,
         apellido,
         cantidad,
